@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AuthService } from '../auth/auth.service';
 type NewUserObj = {
   email: string;
   name: string;

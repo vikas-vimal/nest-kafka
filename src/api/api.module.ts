@@ -5,9 +5,11 @@ import { PassportModule } from '@nestjs/passport';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthService } from './auth/auth.service';
 import { KafkaController } from './controllers/kafka.controller';
+import { PostController } from './controllers/post.controller';
 import { UserController } from './controllers/user.controller';
 import { JwtAuthGuard } from './guard/jwt.auth.guard';
 import { KafkaProducerService } from './producers/kafka.producer.service';
+import { PostService } from './services/post.service';
 import { UserService } from './services/user.service';
 import { JwtStrategy } from './strategy/jwt.strategy';
 
@@ -21,7 +23,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
       },
     }),
   ],
-  controllers: [KafkaController, UserController],
+  controllers: [KafkaController, UserController, PostController],
   providers: [
     {
       provide: APP_GUARD,
@@ -32,6 +34,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
     PrismaService,
     AuthService,
     JwtStrategy,
+    PostService,
   ],
   exports: [AuthService],
 })

@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { KafkaController } from './controllers/kafka.controller';
-import { KafkaConsumerService } from './producers/kafka.consumer.service';
+import { UserController } from './controllers/user.controller';
 import { KafkaProducerService } from './producers/kafka.producer.service';
+import { UserService } from './services/user.service';
 
 @Module({
-  controllers: [KafkaController],
-  providers: [KafkaProducerService, KafkaConsumerService],
+  controllers: [KafkaController, UserController],
+  providers: [KafkaProducerService, UserService, PrismaService],
   imports: [],
 })
 export class ApiModule {}

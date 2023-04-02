@@ -4,11 +4,9 @@ import {
   Controller,
   Get,
   HttpException,
-  Param,
   Post,
   Query,
 } from '@nestjs/common';
-import { KafkaConsumerService } from '../producers/kafka.consumer.service';
 import { KafkaProducerService } from '../producers/kafka.producer.service';
 
 @Controller({
@@ -16,10 +14,7 @@ import { KafkaProducerService } from '../producers/kafka.producer.service';
   version: '1',
 })
 export class KafkaController {
-  constructor(
-    private consumer: KafkaConsumerService,
-    private producer: KafkaProducerService,
-  ) {}
+  constructor(private producer: KafkaProducerService) {}
 
   @Get('messages')
   async getAllMessages(@Query('topic') topic: string) {
@@ -31,10 +26,8 @@ export class KafkaController {
     }
     console.log('--- fetching from ::', topic);
     const messages: string[] = [];
-    await this.consumer.listenForMessages(topic, async (message: string) => {
-      messages.push(message);
-    });
-    return { data: { docs: messages } };
+
+    return { data: { docs: [messages] } };
   }
 
   @Post('message')
@@ -49,7 +42,10 @@ export class KafkaController {
       });
     }
     console.log('--- publishing to ::', topic, message);
-    const sent = await this.producer.publishMessage(topic, message);
+    const sent = await this.producer.publishMessage(
+      topic,
+      JSON.stringify(message),
+    );
     if (!sent) {
       return new HttpException('Something went wrong!', 500);
     }

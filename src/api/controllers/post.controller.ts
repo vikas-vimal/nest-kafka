@@ -1,5 +1,6 @@
 import { Body, Controller, HttpException, Post } from '@nestjs/common';
 import { CurrentUser } from '../decorators/currentUser.decorator';
+import { KafkaProducerService } from '../producers/kafka.producer.service';
 import { PostService } from '../services/post.service';
 import { UserService } from '../services/user.service';
 
@@ -8,6 +9,7 @@ export class PostController {
   constructor(
     private userService: UserService,
     private postService: PostService,
+    private kafkaProducerService: KafkaProducerService,
   ) {}
 
   @Post('create')
@@ -23,16 +25,22 @@ export class PostController {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    const result = await this.postService.createNewPost(
-      currentUser,
-      newPostPayload,
+    const result = await this.kafkaProducerService.publishMessage(
+      'test',
+      JSON.stringify({ ...newPostPayload, type: 'SAVE_POST' }),
     );
+    console.log({ result });
+
+    // const result = await this.postService.createNewPost(
+    //   currentUser,
+    //   newPostPayload,
+    // );
     if (!result) {
       throw new HttpException(
         'Unable to create post! Please try again later!',
         400,
       );
     }
-    return result;
+    return newPostPayload;
   }
 }

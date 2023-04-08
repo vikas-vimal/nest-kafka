@@ -1,8 +1,16 @@
-import { Body, Controller, HttpException, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CurrentUser } from '../decorators/currentUser.decorator';
 import { KafkaProducerService } from '../producers/kafka.producer.service';
 import { PostService } from '../services/post.service';
 import { UserService } from '../services/user.service';
+import { Public } from '../decorators/publicRoute.decorator';
 
 @Controller('post/v1')
 export class PostController {
@@ -13,7 +21,7 @@ export class PostController {
   ) {}
 
   @Post('create')
-  async registerUser(
+  async createNewPost(
     @CurrentUser() currentUser: JwtUserObj,
     @Body() payload: any,
   ) {
@@ -29,7 +37,7 @@ export class PostController {
       'test',
       JSON.stringify({ ...newPostPayload, type: 'SAVE_POST' }),
     );
-    console.log({ result });
+    // console.log({ result });
 
     // const result = await this.postService.createNewPost(
     //   currentUser,
@@ -42,5 +50,63 @@ export class PostController {
       );
     }
     return newPostPayload;
+  }
+
+  @Public()
+  @Get('feed')
+  async getPostsFeed(
+    @Query('search') searchKeyword: string,
+    @Query('page') page = 1,
+    @Query('pageSize') pageSize = 10,
+  ) {
+    if (page < 1) page = 1;
+    if (pageSize > 50) pageSize = 50;
+    searchKeyword = searchKeyword ? searchKeyword.trim().toLowerCase() : '';
+    const list = await this.postService.searchPosts(
+      page,
+      pageSize,
+      searchKeyword,
+    );
+    // console.log({ result: list });
+
+    if (!list || !list.length) {
+      return {
+        docs: [],
+        nextPage: null,
+      };
+    }
+    const nextPage = list.length >= pageSize ? page + 1 : null;
+    return {
+      docs: list,
+      nextPage,
+    };
+  }
+
+  @Get('wall')
+  async findUserPosts(
+    @CurrentUser() currentUser: JwtUserObj,
+    @Query('page') page = 1,
+    @Query('pageSize') pageSize = 10,
+  ) {
+    if (page < 1) page = 1;
+    if (pageSize > 50) pageSize = 50;
+    const list = await this.postService.findUserPostsById(
+      currentUser.id,
+      page,
+      pageSize,
+    );
+    console.log({ result: list });
+
+    if (!list || !list.length) {
+      return {
+        docs: [],
+        nextPage: null,
+      };
+    }
+    const nextPage = list.length >= pageSize ? page + 1 : null;
+    return {
+      docs: list,
+      nextPage,
+    };
   }
 }

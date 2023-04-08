@@ -48,4 +48,59 @@ export class PostService {
       return null;
     }
   }
+
+  async searchPosts(
+    page: number,
+    pageSize: number,
+    searchKeyword: string,
+  ): Promise<Post[]> {
+    try {
+      const list = await this.prisma.post.findMany({
+        where: {
+          title: {
+            contains: searchKeyword,
+          },
+          content: {
+            contains: searchKeyword,
+          },
+        },
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          author: true,
+        },
+      });
+      return list;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async findUserPostsById(
+    userId: number,
+    page: number,
+    pageSize: number,
+  ): Promise<Post[]> {
+    try {
+      const list = this.prisma.post.findMany({
+        where: {
+          authorId: userId,
+        },
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      console.log({ found: list });
+      return list;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
 }

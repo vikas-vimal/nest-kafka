@@ -28,6 +28,7 @@ export class UserController {
         400,
       );
     }
+    return await this.authService.login(result);
   }
 
   @Public()

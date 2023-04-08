@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { hash as argonHash, verify as argonVerify } from 'argon2';
+import { JwtService } from '@nestjs/jwt';
 type NewUserObj = {
   email: string;
   name: string;
@@ -11,14 +13,16 @@ type NewUserObj = {
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
 
   async registerNewUser(userObj: NewUserObj) {
     try {
-      const result = await this.prisma.user.create({
+      const passwordHash = await argonHash(userObj.password);
+      userObj['password'] = passwordHash;
+      const user = await this.prisma.user.create({
         data: userObj,
       });
-      return { data: result };
+      return user;
     } catch (error) {
       console.log(error?.message);
       console.log(error?.meta);
